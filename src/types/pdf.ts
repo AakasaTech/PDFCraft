@@ -18,7 +18,7 @@ export interface PdfBuildResult {
   size: number;
 }
 
-/** One page tile in the Organize/Split page grid. */
+/** One page tile in the Organize page grid. */
 export interface OrganizePageItem {
   /** Stable id for dnd-kit — distinct from sourceIndex so a duplicated page has its own identity. */
   id: string;
@@ -28,4 +28,26 @@ export interface OrganizePageItem {
   rotation: 0 | 90 | 180 | 270;
   /** Data URL thumbnail, or null while still rendering. */
   thumbnailUrl: string | null;
+}
+
+/** One page tile in the Split "extract pages" grid. */
+export interface SplitPageItem {
+  id: string;
+  /** 0-indexed page number in the original source document. */
+  sourceIndex: number;
+  selected: boolean;
+  /** Data URL thumbnail, or null while still rendering. */
+  thumbnailUrl: string | null;
+}
+
+/** Output of a Split operation — a single PDF (extract mode) or a zip of several (ranges mode). */
+export interface SplitResult {
+  blob: Blob;
+  url: string;
+  size: number;
+  /** Number of PDF files produced (1 for extract/single-range, N when zipped). */
+  fileCount: number;
+  /** Page count of the single output PDF — only meaningful when fileCount === 1. */
+  pageCount?: number;
+  isZip: boolean;
 }

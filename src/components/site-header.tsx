@@ -16,7 +16,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 const TOOLS = [
   { label: "Merge PDF", href: "/" },
-  { label: "Split PDF", href: null },
+  { label: "Split PDF", href: "/split" },
   { label: "Compress PDF", href: null },
   { label: "Organize PDF", href: "/organize" },
   { label: "Convert PDF", href: null },

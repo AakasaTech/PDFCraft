@@ -1,7 +1,7 @@
 # PDF Merge
 
-A small suite of PDF tools — merge and organize today, more on the way — that run entirely in
-your browser.
+A small suite of PDF tools — merge, organize, and split today, more on the way — that run
+entirely in your browser.
 
 ## Overview
 
@@ -19,9 +19,15 @@ your browser.
 - Duplicating a page is supported at the library level (`buildOrganizedPdf`), not yet exposed in
   the UI
 
-Both tools share the same client-side-only architecture — no document storage, no database, no
-cloud upload — and the underlying upload/validation/result-panel infrastructure is shared so
-future tools (Split, Convert, Compress — see [Roadmap](#roadmap)) plug into the same pattern.
+**Split PDF** (`/split`)
+- **Select Pages** mode: check individual page thumbnails, extract them into one new PDF
+- **Page Ranges** mode: enter ranges like `1-3, 4-6, 8` — each range becomes its own PDF; a
+  single range downloads as a plain PDF, multiple ranges download as a zip (`fflate`)
+- A "split every page into its own PDF" shortcut fills in one range per page
+
+All three tools share the same client-side-only architecture — no document storage, no database,
+no cloud upload — and the underlying upload/validation/result-panel infrastructure is shared so
+future tools (Convert, Compress — see [Roadmap](#roadmap)) plug into the same pattern.
 
 ## Architecture
 
@@ -49,10 +55,11 @@ touches the output file.
 - [Next.js 15+](https://nextjs.org/) (App Router) + TypeScript
 - [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
 - [Lucide Icons](https://lucide.dev/)
-- [pdf-lib](https://pdf-lib.js.org/) for client-side PDF manipulation (merge, reorder, rotate, delete pages)
-- [pdfjs-dist](https://mozilla.github.io/pdf.js/) for rendering page thumbnails (Organize)
+- [pdf-lib](https://pdf-lib.js.org/) for client-side PDF manipulation (merge, reorder, rotate, delete, split pages)
+- [pdfjs-dist](https://mozilla.github.io/pdf.js/) for rendering page thumbnails (Organize, Split)
+- [fflate](https://github.com/101arrowz/fflate) for client-side zip creation (Split's multi-range download)
 - [react-dropzone](https://react-dropzone.js.org/) for drag-and-drop uploads
-- [dnd-kit](https://dndkit.com/) for sortable drag-and-drop reordering (file list and page grid)
+- [dnd-kit](https://dndkit.com/) for sortable drag-and-drop reordering (Merge's file list, Organize's page grid)
 - [next-themes](https://github.com/pacocoursey/next-themes) for light/dark mode
 - [Vitest](https://vitest.dev/) for unit tests
 
@@ -65,6 +72,9 @@ src/
 │   ├── organize/
 │   │   ├── page.tsx             # Organize tool ("/organize")
 │   │   └── layout.tsx           # Route-level metadata (page.tsx is a client component)
+│   ├── split/
+│   │   ├── page.tsx             # Split tool ("/split")
+│   │   └── layout.tsx           # Route-level metadata
 │   ├── layout.tsx               # Root layout, theming, metadata
 │   ├── privacy/ terms/ about/   # Placeholder footer pages
 │   └── globals.css
@@ -72,12 +82,13 @@ src/
 ├── components/
 │   ├── pdf-uploader.tsx         # Drag-and-drop upload area (single- or multi-file)
 │   ├── add-more-pdfs-button.tsx
-│   ├── pdf-file-list.tsx / pdf-file-card.tsx     # Merge: dnd-kit sortable file list
-│   ├── pdf-page-grid.tsx / pdf-page-thumbnail.tsx # Organize: dnd-kit sortable page grid
+│   ├── pdf-file-list.tsx / pdf-file-card.tsx           # Merge: dnd-kit sortable file list
+│   ├── pdf-page-grid.tsx / pdf-page-thumbnail.tsx       # Organize: dnd-kit sortable page grid
+│   ├── pdf-page-select-grid.tsx / pdf-page-select-thumbnail.tsx  # Split: checkbox page grid
 │   ├── pdf-summary.tsx          # Files / pages / size summary
 │   ├── pdf-preview.tsx          # In-browser PDF preview dialog
-│   ├── pdf-action-button.tsx    # Shared primary-CTA (icon + busy state) — Merge/Organize/...
-│   ├── pdf-result-panel.tsx     # Shared success panel — Merge/Organize/...
+│   ├── pdf-action-button.tsx    # Shared primary-CTA (icon + busy state) — every tool
+│   ├── pdf-result-panel.tsx     # Shared success panel — every tool
 │   ├── merge-button.tsx / merge-result.tsx        # Thin Merge-specific wrappers around the above
 │   ├── site-header.tsx / site-footer.tsx          # Header's "PDF Tools" dropdown links tools together
 │   ├── theme-toggle.tsx / theme-provider.tsx
@@ -86,18 +97,21 @@ src/
 ├── lib/
 │   ├── pdf/
 │   │   ├── merge-pdfs.ts        # Merge logic
-│   │   ├── organize-pdf.ts      # Reorder/rotate/delete/duplicate logic
+│   │   ├── organize-pdf.ts      # Reorder/rotate/delete/duplicate logic (also powers Split's "Select Pages" mode)
+│   │   ├── split-pdf.ts         # Page-range parsing + splitting into multiple PDFs
 │   │   ├── render-page.ts       # pdfjs-dist page-to-thumbnail rendering
 │   │   ├── pdf-metadata.ts      # Page count / load validation
 │   │   └── validation.ts        # File type & size validation
+│   ├── zip-utils.ts             # fflate wrapper for zipping multiple split outputs
 │   ├── file-utils.ts            # Formatting, filename sanitization
 │   └── constants.ts             # Configurable limits & site metadata
 │
 ├── hooks/
 │   ├── use-pdf-file-queue.ts    # Shared multi-file upload queue (Merge; future: Convert images→PDF)
-│   ├── use-single-pdf-file.ts   # Shared single-file upload slot (Organize; future: Split, Compress)
+│   ├── use-single-pdf-file.ts   # Shared single-file upload slot (Organize, Split; future: Compress)
 │   ├── use-pdf-merger.ts        # Merge tool state, wraps use-pdf-file-queue
-│   └── use-organize-pdf.ts      # Organize tool state, wraps use-single-pdf-file + render-page
+│   ├── use-organize-pdf.ts      # Organize tool state, wraps use-single-pdf-file + render-page
+│   └── use-split-pdf.ts         # Split tool state, wraps use-single-pdf-file + render-page + zip-utils
 │
 └── types/
     └── pdf.ts                   # PdfFileItem, PdfBuildResult (shared), OrganizePageItem
@@ -208,14 +222,13 @@ Adjust these values to change upload limits application-wide.
 
 ## Roadmap
 
-The "PDF Tools" header menu lists four tools; Merge and Organize are live, the rest are planned
-in this order:
+The "PDF Tools" header menu lists four tools; Merge, Organize, and Split are live, one remains:
 
 1. **Organize PDF** ✅ — reorder, rotate, delete pages
-2. **Split PDF** — split by page ranges or extract selected pages; reuses Organize's page grid,
-   adds a zip-download step for multiple output files
+2. **Split PDF** ✅ — extract selected pages, or split by page ranges (zipped when there's more
+   than one output file)
 3. **Convert PDF** — Images → PDF (reuses Merge's file-list UI) and PDF → Images (reuses
-   Organize's thumbnail renderer + Split's zip download)
+   Organize/Split's thumbnail renderer + Split's zip download)
 4. **Compress PDF** — a "basic" pass (object-stream optimization, metadata stripping) first;
    true image recompression needs a WASM library evaluation and is a separate spike
 

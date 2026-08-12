@@ -3,21 +3,22 @@
 import { CheckCircle2, Download, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatFileSize } from "@/lib/file-utils";
-import type { PdfBuildResult } from "@/types/pdf";
 
 interface PdfResultPanelProps {
-  result: PdfBuildResult;
+  result: { size: number };
   filename: string;
+  title?: string;
   description: string;
   downloadLabel?: string;
   onDownload: () => void;
   onStartOver: () => void;
 }
 
-/** Shared success panel: every tool ends with "here's your file, download or start over." */
+/** Shared success panel: every tool ends with "here's your file(s), download or start over." */
 export function PdfResultPanel({
   result,
   filename,
+  title = "Your PDF is ready",
   description,
   downloadLabel = "Download PDF",
   onDownload,
@@ -29,7 +30,7 @@ export function PdfResultPanel({
         <CheckCircle2 className="size-8" />
       </div>
       <div className="space-y-1">
-        <h3 className="text-lg font-semibold text-foreground">Your PDF is ready</h3>
+        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         <p className="text-sm text-muted-foreground">
           {description} &middot; {formatFileSize(result.size)}
         </p>
