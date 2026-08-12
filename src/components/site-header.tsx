@@ -5,6 +5,7 @@ import { FileStack, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -37,15 +38,17 @@ export function SiteHeader() {
               }
             />
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>PDF Tools</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem render={<Link href="/">Merge PDF</Link>} />
-              {FUTURE_TOOLS.map((tool) => (
-                <DropdownMenuItem key={tool} disabled>
-                  {tool}
-                  <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>PDF Tools</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem render={<Link href="/">Merge PDF</Link>} />
+                {FUTURE_TOOLS.map((tool) => (
+                  <DropdownMenuItem key={tool} disabled>
+                    {tool}
+                    <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
           <ThemeToggle />
