@@ -10,9 +10,17 @@ import { toast } from "sonner";
 
 interface PdfUploaderProps {
   onFilesSelected: (files: File[]) => void;
+  multiple?: boolean;
+  title?: string;
+  helpText?: string;
 }
 
-export function PdfUploader({ onFilesSelected }: PdfUploaderProps) {
+export function PdfUploader({
+  onFilesSelected,
+  multiple = true,
+  title = "Drop PDF files here",
+  helpText = `Supports multiple PDF files · up to ${MAX_FILE_SIZE_LABEL} each`,
+}: PdfUploaderProps) {
   const onDrop = useCallback(
     (acceptedFiles: File[], rejections: FileRejection[]) => {
       if (acceptedFiles.length > 0) {
@@ -28,7 +36,7 @@ export function PdfUploader({ onFilesSelected }: PdfUploaderProps) {
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: { "application/pdf": [".pdf"] },
-    multiple: true,
+    multiple,
   });
 
   return (
@@ -52,7 +60,7 @@ export function PdfUploader({ onFilesSelected }: PdfUploaderProps) {
         <UploadCloud className="size-8" />
       </div>
       <div className="space-y-1">
-        <p className="text-lg font-medium text-foreground">Drop PDF files here</p>
+        <p className="text-lg font-medium text-foreground">{title}</p>
         <p className="text-sm text-muted-foreground">or</p>
       </div>
       <Button
@@ -64,9 +72,7 @@ export function PdfUploader({ onFilesSelected }: PdfUploaderProps) {
       >
         Select PDF Files
       </Button>
-      <p className="text-xs text-muted-foreground">
-        Supports multiple PDF files &middot; up to {MAX_FILE_SIZE_LABEL} each
-      </p>
+      <p className="text-xs text-muted-foreground">{helpText}</p>
     </div>
   );
 }

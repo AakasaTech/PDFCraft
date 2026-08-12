@@ -1,47 +1,58 @@
 # PDF Merge
 
-Merge PDF files quickly and securely — entirely in your browser.
-
-PDF Merge lets you upload multiple PDF files, drag them into the order you want, and combine
-them into a single downloadable PDF. All PDF processing happens client-side; your documents are
-never uploaded to a server.
+A small suite of PDF tools — merge and organize today, more on the way — that run entirely in
+your browser.
 
 ## Overview
 
+**Merge PDF** (`/`)
 - Upload two or more PDF files via drag-and-drop or a file picker
 - Reorder files with an accessible, keyboard-friendly drag list
 - Preview each PDF before merging
 - Merge in the exact selected order, preserving page size, orientation, and content
 - Download the merged PDF with a custom filename
-- Works fully offline once loaded — no document storage, no database, no cloud upload
+
+**Organize PDF** (`/organize`)
+- Upload one PDF; each page renders as a thumbnail (via `pdfjs-dist`)
+- Drag pages to reorder, rotate individual pages, delete pages
+- Save produces a new PDF with those changes applied
+- Duplicating a page is supported at the library level (`buildOrganizedPdf`), not yet exposed in
+  the UI
+
+Both tools share the same client-side-only architecture — no document storage, no database, no
+cloud upload — and the underlying upload/validation/result-panel infrastructure is shared so
+future tools (Split, Convert, Compress — see [Roadmap](#roadmap)) plug into the same pattern.
 
 ## Architecture
 
 ```text
 Browser
    ↓
-User selects PDFs
+User selects PDF(s)
    ↓
 JavaScript reads ArrayBuffers (File API)
    ↓
-pdf-lib combines documents
+pdf-lib transforms the document(s)   (+ pdfjs-dist renders page thumbnails, Organize only)
    ↓
-Merged PDF Blob
+Output PDF Blob
    ↓
 Browser download (object URL)
 ```
 
 There is no backend file-processing API. The Next.js server only serves the static/SSR shell of
-the application; all PDF manipulation happens in the client using `pdf-lib`.
+the application; all PDF manipulation happens in the client using `pdf-lib`. `pdfjs-dist` is used
+read-only, purely to rasterize page thumbnails for the Organize tool's page grid — it never
+touches the output file.
 
 ## Technology Stack
 
 - [Next.js 15+](https://nextjs.org/) (App Router) + TypeScript
 - [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
 - [Lucide Icons](https://lucide.dev/)
-- [pdf-lib](https://pdf-lib.js.org/) for client-side PDF merging
+- [pdf-lib](https://pdf-lib.js.org/) for client-side PDF manipulation (merge, reorder, rotate, delete pages)
+- [pdfjs-dist](https://mozilla.github.io/pdf.js/) for rendering page thumbnails (Organize)
 - [react-dropzone](https://react-dropzone.js.org/) for drag-and-drop uploads
-- [dnd-kit](https://dndkit.com/) for sortable drag-and-drop reordering
+- [dnd-kit](https://dndkit.com/) for sortable drag-and-drop reordering (file list and page grid)
 - [next-themes](https://github.com/pacocoursey/next-themes) for light/dark mode
 - [Vitest](https://vitest.dev/) for unit tests
 
@@ -50,37 +61,46 @@ the application; all PDF manipulation happens in the client using `pdf-lib`.
 ```text
 src/
 ├── app/
-│   ├── page.tsx            # Main merge workflow
-│   ├── layout.tsx          # Root layout, theming, metadata
-│   ├── privacy/ terms/ about/  # Placeholder footer pages
+│   ├── page.tsx                 # Merge tool ("/")
+│   ├── organize/
+│   │   ├── page.tsx             # Organize tool ("/organize")
+│   │   └── layout.tsx           # Route-level metadata (page.tsx is a client component)
+│   ├── layout.tsx               # Root layout, theming, metadata
+│   ├── privacy/ terms/ about/   # Placeholder footer pages
 │   └── globals.css
 │
 ├── components/
-│   ├── pdf-uploader.tsx        # Initial drag-and-drop upload area
+│   ├── pdf-uploader.tsx         # Drag-and-drop upload area (single- or multi-file)
 │   ├── add-more-pdfs-button.tsx
-│   ├── pdf-file-list.tsx       # dnd-kit sortable list
-│   ├── pdf-file-card.tsx       # Single file row
-│   ├── pdf-summary.tsx         # Files / pages / size summary
-│   ├── pdf-preview.tsx         # In-browser PDF preview dialog
-│   ├── merge-button.tsx
-│   ├── merge-result.tsx        # Success panel + download/start over
-│   ├── site-header.tsx / site-footer.tsx
+│   ├── pdf-file-list.tsx / pdf-file-card.tsx     # Merge: dnd-kit sortable file list
+│   ├── pdf-page-grid.tsx / pdf-page-thumbnail.tsx # Organize: dnd-kit sortable page grid
+│   ├── pdf-summary.tsx          # Files / pages / size summary
+│   ├── pdf-preview.tsx          # In-browser PDF preview dialog
+│   ├── pdf-action-button.tsx    # Shared primary-CTA (icon + busy state) — Merge/Organize/...
+│   ├── pdf-result-panel.tsx     # Shared success panel — Merge/Organize/...
+│   ├── merge-button.tsx / merge-result.tsx        # Thin Merge-specific wrappers around the above
+│   ├── site-header.tsx / site-footer.tsx          # Header's "PDF Tools" dropdown links tools together
 │   ├── theme-toggle.tsx / theme-provider.tsx
-│   └── ui/                     # shadcn/ui primitives
+│   └── ui/                      # shadcn/ui primitives
 │
 ├── lib/
 │   ├── pdf/
-│   │   ├── merge-pdfs.ts       # Core merge logic
-│   │   ├── pdf-metadata.ts     # Page count / load validation
-│   │   └── validation.ts       # File type & size validation
-│   ├── file-utils.ts           # Formatting, filename sanitization
-│   └── constants.ts            # Configurable limits & site metadata
+│   │   ├── merge-pdfs.ts        # Merge logic
+│   │   ├── organize-pdf.ts      # Reorder/rotate/delete/duplicate logic
+│   │   ├── render-page.ts       # pdfjs-dist page-to-thumbnail rendering
+│   │   ├── pdf-metadata.ts      # Page count / load validation
+│   │   └── validation.ts        # File type & size validation
+│   ├── file-utils.ts            # Formatting, filename sanitization
+│   └── constants.ts             # Configurable limits & site metadata
 │
 ├── hooks/
-│   └── use-pdf-merger.ts       # Central state management for the workflow
+│   ├── use-pdf-file-queue.ts    # Shared multi-file upload queue (Merge; future: Convert images→PDF)
+│   ├── use-single-pdf-file.ts   # Shared single-file upload slot (Organize; future: Split, Compress)
+│   ├── use-pdf-merger.ts        # Merge tool state, wraps use-pdf-file-queue
+│   └── use-organize-pdf.ts      # Organize tool state, wraps use-single-pdf-file + render-page
 │
 └── types/
-    └── pdf.ts
+    └── pdf.ts                   # PdfFileItem, PdfBuildResult (shared), OrganizePageItem
 ```
 
 ## Installation
@@ -88,6 +108,12 @@ src/
 ```bash
 npm install
 ```
+
+`npm install` runs a `postinstall` step (`scripts/copy-pdf-worker.mjs`) that copies the
+`pdfjs-dist` worker script into `public/pdf.worker.min.mjs`. This keeps the worker version in
+lockstep with the installed `pdfjs-dist` package — a mismatch throws `API version does not match
+Worker version` at runtime. The copied file is gitignored and regenerated on every install; the
+`Dockerfile` runs the same script explicitly in its build stage (see the Docker section below).
 
 ## Development
 
@@ -132,6 +158,11 @@ crash recovery and better throughput under load. No filesystem or database depen
 required — the app is stateless. The container listens on **port 3004** (chosen to avoid
 colliding with the other Aakasa Digital apps — see below).
 
+The `deps` stage runs `npm ci --ignore-scripts` (it only produces `node_modules` for the next
+stage — running the pdfjs-worker postinstall there would be wasted work, since `builder`'s
+`COPY . .` pulls `public/` fresh from the build context and would discard it anyway). The
+`builder` stage runs `scripts/copy-pdf-worker.mjs` explicitly instead, after `COPY . .`.
+
 ## Deployment
 
 The app is a standard Next.js application with no server-side file storage, so it deploys
@@ -174,3 +205,20 @@ export const MAX_COMBINED_SIZE_BYTES = 500 * 1024 * 1024; // combined
 ```
 
 Adjust these values to change upload limits application-wide.
+
+## Roadmap
+
+The "PDF Tools" header menu lists four tools; Merge and Organize are live, the rest are planned
+in this order:
+
+1. **Organize PDF** ✅ — reorder, rotate, delete pages
+2. **Split PDF** — split by page ranges or extract selected pages; reuses Organize's page grid,
+   adds a zip-download step for multiple output files
+3. **Convert PDF** — Images → PDF (reuses Merge's file-list UI) and PDF → Images (reuses
+   Organize's thumbnail renderer + Split's zip download)
+4. **Compress PDF** — a "basic" pass (object-stream optimization, metadata stripping) first;
+   true image recompression needs a WASM library evaluation and is a separate spike
+
+Watermark, page numbers, password-protect/unlock, and sign are not yet on the menu — the current
+plan folds watermark/page-numbers into Organize, and treats protect/unlock/sign as a later 5th
+menu entry, since they need materially different UI (password prompts, signature capture).

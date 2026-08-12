@@ -1,5 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import type { PdfFileItem, MergeResult } from "@/types/pdf";
+import type { PdfFileItem, PdfBuildResult } from "@/types/pdf";
 
 export class PdfMergeError extends Error {
   constructor(message: string) {
@@ -12,7 +12,7 @@ export class PdfMergeError extends Error {
  * Merges PDF files in the given order into a single PDF, preserving each
  * page's original dimensions, orientation, and contents.
  */
-export async function mergePdfs(items: PdfFileItem[]): Promise<MergeResult> {
+export async function mergePdfs(items: PdfFileItem[]): Promise<PdfBuildResult> {
   if (items.length < 2) {
     throw new PdfMergeError("Select at least two PDF files to merge.");
   }

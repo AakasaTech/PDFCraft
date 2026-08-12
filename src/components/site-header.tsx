@@ -14,7 +14,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const FUTURE_TOOLS = ["Split PDF", "Compress PDF", "Organize PDF", "Convert PDF"];
+const TOOLS = [
+  { label: "Merge PDF", href: "/" },
+  { label: "Split PDF", href: null },
+  { label: "Compress PDF", href: null },
+  { label: "Organize PDF", href: "/organize" },
+  { label: "Convert PDF", href: null },
+];
 
 export function SiteHeader() {
   return (
@@ -41,13 +47,16 @@ export function SiteHeader() {
               <DropdownMenuGroup>
                 <DropdownMenuLabel>PDF Tools</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem render={<Link href="/">Merge PDF</Link>} />
-                {FUTURE_TOOLS.map((tool) => (
-                  <DropdownMenuItem key={tool} disabled>
-                    {tool}
-                    <span className="ml-auto text-xs text-muted-foreground">Soon</span>
-                  </DropdownMenuItem>
-                ))}
+                {TOOLS.map((tool) =>
+                  tool.href ? (
+                    <DropdownMenuItem key={tool.label} render={<Link href={tool.href}>{tool.label}</Link>} />
+                  ) : (
+                    <DropdownMenuItem key={tool.label} disabled>
+                      {tool.label}
+                      <span className="ml-auto text-xs text-muted-foreground">Soon</span>
+                    </DropdownMenuItem>
+                  )
+                )}
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>

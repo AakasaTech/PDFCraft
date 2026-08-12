@@ -10,9 +10,22 @@ export interface PdfFileItem {
   error?: string;
 }
 
-export interface MergeResult {
+/** Shared shape returned by every tool that produces a downloadable PDF (Merge, Organize, ...). */
+export interface PdfBuildResult {
   blob: Blob;
   url: string;
   pageCount: number;
   size: number;
+}
+
+/** One page tile in the Organize/Split page grid. */
+export interface OrganizePageItem {
+  /** Stable id for dnd-kit — distinct from sourceIndex so a duplicated page has its own identity. */
+  id: string;
+  /** 0-indexed page number in the original source document. */
+  sourceIndex: number;
+  /** Extra rotation (degrees) the user has applied on top of the page's original rotation. */
+  rotation: 0 | 90 | 180 | 270;
+  /** Data URL thumbnail, or null while still rendering. */
+  thumbnailUrl: string | null;
 }

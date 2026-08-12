@@ -2,102 +2,18 @@
 
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
-import type { PdfFileItem, MergeResult } from "@/types/pdf";
-import { generateId, buildOutputFilename } from "@/lib/file-utils";
-import {
-  validateFileType,
-  validateFileSize,
-  validateCombinedSize,
-} from "@/lib/pdf/validation";
-import { readPdfMetadata, PdfLoadError } from "@/lib/pdf/pdf-metadata";
+import type { PdfBuildResult } from "@/types/pdf";
+import { buildOutputFilename } from "@/lib/file-utils";
 import { mergePdfs, PdfMergeError } from "@/lib/pdf/merge-pdfs";
 import { DEFAULT_OUTPUT_FILENAME } from "@/lib/constants";
+import { usePdfFileQueue } from "@/hooks/use-pdf-file-queue";
 
 export function usePdfMerger() {
-  const [files, setFiles] = useState<PdfFileItem[]>([]);
+  const queue = usePdfFileQueue();
   const [outputFilename, setOutputFilename] = useState(DEFAULT_OUTPUT_FILENAME);
   const [isMerging, setIsMerging] = useState(false);
-  const [mergeResult, setMergeResult] = useState<MergeResult | null>(null);
-  const mergeResultRef = useRef<MergeResult | null>(null);
-
-  const loadMetadataFor = useCallback(async (id: string, file: File) => {
-    try {
-      const { pageCount } = await readPdfMetadata(file);
-      setFiles((current) =>
-        current.map((item) =>
-          item.id === id ? { ...item, pageCount, status: "ready" } : item
-        )
-      );
-    } catch (error) {
-      const message =
-        error instanceof PdfLoadError
-          ? error.message
-          : "This PDF could not be opened. It may be corrupted or password protected.";
-      setFiles((current) =>
-        current.map((item) =>
-          item.id === id ? { ...item, status: "error", error: message } : item
-        )
-      );
-      toast.error(message);
-    }
-  }, []);
-
-  const addFiles = useCallback(
-    (incoming: FileList | File[]) => {
-      const incomingArray = Array.from(incoming);
-      if (incomingArray.length === 0) return;
-
-      const currentTotal = files.reduce((sum, item) => sum + item.size, 0);
-      const accepted: PdfFileItem[] = [];
-      let runningTotal = currentTotal;
-
-      for (const file of incomingArray) {
-        const typeResult = validateFileType(file);
-        if (!typeResult.valid) {
-          toast.error(typeResult.error);
-          continue;
-        }
-
-        const sizeResult = validateFileSize(file);
-        if (!sizeResult.valid) {
-          toast.error(sizeResult.error);
-          continue;
-        }
-
-        const combinedResult = validateCombinedSize(runningTotal + file.size);
-        if (!combinedResult.valid) {
-          toast.error(combinedResult.error);
-          continue;
-        }
-
-        runningTotal += file.size;
-        accepted.push({
-          id: generateId(),
-          file,
-          name: file.name,
-          size: file.size,
-          pageCount: 0,
-          status: "processing",
-        });
-      }
-
-      if (accepted.length === 0) return;
-
-      setFiles((current) => [...current, ...accepted]);
-      for (const item of accepted) {
-        void loadMetadataFor(item.id, item.file);
-      }
-    },
-    [files, loadMetadataFor]
-  );
-
-  const removeFile = useCallback((id: string) => {
-    setFiles((current) => current.filter((item) => item.id !== id));
-  }, []);
-
-  const reorderFiles = useCallback((newOrder: PdfFileItem[]) => {
-    setFiles(newOrder);
-  }, []);
+  const [mergeResult, setMergeResult] = useState<PdfBuildResult | null>(null);
+  const mergeResultRef = useRef<PdfBuildResult | null>(null);
 
   const clearMergeResult = useCallback(() => {
     if (mergeResultRef.current) {
@@ -108,8 +24,7 @@ export function usePdfMerger() {
   }, []);
 
   const merge = useCallback(async () => {
-    const readyFiles = files.filter((item) => item.status === "ready");
-    if (readyFiles.length < 2) {
+    if (queue.readyFiles.length < 2) {
       toast.error("Select at least two valid PDF files to merge.");
       return;
     }
@@ -118,7 +33,7 @@ export function usePdfMerger() {
     clearMergeResult();
 
     try {
-      const result = await mergePdfs(readyFiles);
+      const result = await mergePdfs(queue.readyFiles);
       mergeResultRef.current = result;
       setMergeResult(result);
     } catch (error) {
@@ -130,35 +45,31 @@ export function usePdfMerger() {
     } finally {
       setIsMerging(false);
     }
-  }, [files, clearMergeResult]);
+  }, [queue.readyFiles, clearMergeResult]);
 
   const reset = useCallback(() => {
     clearMergeResult();
-    setFiles([]);
+    queue.clearFiles();
     setOutputFilename(DEFAULT_OUTPUT_FILENAME);
     setIsMerging(false);
-  }, [clearMergeResult]);
+  }, [clearMergeResult, queue]);
 
-  const readyFiles = files.filter((item) => item.status === "ready");
-  const totalPages = readyFiles.reduce((sum, item) => sum + item.pageCount, 0);
-  const totalSize = files.reduce((sum, item) => sum + item.size, 0);
-  const isProcessing = files.some((item) => item.status === "processing");
-  const canMerge = readyFiles.length >= 2 && !isProcessing && !isMerging;
+  const canMerge = queue.readyFiles.length >= 2 && !queue.isProcessing && !isMerging;
 
   return {
-    files,
-    addFiles,
-    removeFile,
-    reorderFiles,
+    files: queue.files,
+    addFiles: queue.addFiles,
+    removeFile: queue.removeFile,
+    reorderFiles: queue.reorderFiles,
     outputFilename,
     setOutputFilename,
     isMerging,
     mergeResult,
     merge,
     reset,
-    totalPages,
-    totalSize,
-    isProcessing,
+    totalPages: queue.totalPages,
+    totalSize: queue.totalSize,
+    isProcessing: queue.isProcessing,
     canMerge,
     buildOutputFilename: () => buildOutputFilename(outputFilename),
   };

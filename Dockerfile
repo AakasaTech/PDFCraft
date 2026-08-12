@@ -26,11 +26,16 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Copy manifests first for layer caching
+# Copy manifests first for layer caching.
 COPY package.json package-lock.json* ./
 
-# Install all dependencies (devDependencies needed for the build stage)
-RUN npm ci
+# Install all dependencies (devDependencies needed for the build stage).
+# --ignore-scripts: this stage only produces node_modules for the builder
+# stage to copy — the "postinstall" hook (copies the pdfjs worker into
+# public/) is run explicitly in the builder stage instead, since `COPY . .`
+# there pulls public/ fresh from the build context and would otherwise
+# discard whatever postinstall produced here.
+RUN npm ci --ignore-scripts
 
 # ── Stage 2: build ───────────────────────────────────────────────────────────
 FROM node:24-alpine AS builder
@@ -42,6 +47,9 @@ COPY --from=deps /app/node_modules ./node_modules
 
 # Copy the rest of the source tree
 COPY . .
+
+# See the --ignore-scripts note above.
+RUN node scripts/copy-pdf-worker.mjs
 
 # ─── NEXT_PUBLIC_* vars are embedded at build time ───────────────────────────
 # Pass them via --build-arg. They CANNOT be changed at runtime.

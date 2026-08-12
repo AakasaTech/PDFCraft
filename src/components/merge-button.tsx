@@ -1,7 +1,7 @@
 "use client";
 
-import { Loader2, Merge } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Merge } from "lucide-react";
+import { PdfActionButton } from "@/components/pdf-action-button";
 
 interface MergeButtonProps {
   disabled: boolean;
@@ -11,24 +11,13 @@ interface MergeButtonProps {
 
 export function MergeButton({ disabled, isMerging, onClick }: MergeButtonProps) {
   return (
-    <Button
-      type="button"
-      size="lg"
-      className="w-full gap-2 text-base"
+    <PdfActionButton
       disabled={disabled}
+      isBusy={isMerging}
+      icon={Merge}
+      label="Merge PDFs"
+      busyLabel="Merging PDFs..."
       onClick={onClick}
-    >
-      {isMerging ? (
-        <>
-          <Loader2 className="size-4 animate-spin" />
-          Merging PDFs...
-        </>
-      ) : (
-        <>
-          <Merge className="size-4" />
-          Merge PDFs
-        </>
-      )}
-    </Button>
+    />
   );
 }

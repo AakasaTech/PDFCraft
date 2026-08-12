@@ -20,6 +20,10 @@ export function ensurePdfExtension(name: string): string {
   return name.toLowerCase().endsWith(".pdf") ? name : `${name}.pdf`;
 }
 
+export function stripPdfExtension(name: string): string {
+  return name.toLowerCase().endsWith(".pdf") ? name.slice(0, -4) : name;
+}
+
 export function buildOutputFilename(name: string): string {
   return ensurePdfExtension(sanitizeFilename(name));
 }
