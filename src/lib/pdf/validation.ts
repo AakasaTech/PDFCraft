@@ -1,4 +1,6 @@
 import {
+  ACCEPTED_IMAGE_EXTENSIONS,
+  ACCEPTED_IMAGE_MIME_TYPES,
   ACCEPTED_MIME_TYPES,
   MAX_COMBINED_SIZE_BYTES,
   MAX_COMBINED_SIZE_LABEL,
@@ -20,6 +22,20 @@ export function isPdfFile(file: File): boolean {
 export function validateFileType(file: File): ValidationResult {
   if (!isPdfFile(file)) {
     return { valid: false, error: "Only PDF files are supported." };
+  }
+  return { valid: true };
+}
+
+export function isImageFile(file: File): boolean {
+  if (ACCEPTED_IMAGE_MIME_TYPES.includes(file.type)) return true;
+  // Some browsers/OSes fail to set a MIME type; fall back to extension.
+  const lower = file.name.toLowerCase();
+  return ACCEPTED_IMAGE_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+export function validateImageFileType(file: File): ValidationResult {
+  if (!isImageFile(file)) {
+    return { valid: false, error: "Only JPG and PNG images are supported." };
   }
   return { valid: true };
 }

@@ -17,9 +17,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const TOOLS = [
   { label: "Merge PDF", href: "/" },
   { label: "Split PDF", href: "/split" },
-  { label: "Compress PDF", href: null },
+  { label: "Compress PDF", href: "/compress" },
   { label: "Organize PDF", href: "/organize" },
-  { label: "Convert PDF", href: null },
+  { label: "Convert PDF", href: "/convert" },
+  { label: "Sign PDF", href: "/sign" },
 ];
 
 export function SiteHeader() {

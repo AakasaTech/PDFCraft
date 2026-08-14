@@ -30,8 +30,8 @@ export interface OrganizePageItem {
   thumbnailUrl: string | null;
 }
 
-/** One page tile in the Split "extract pages" grid. */
-export interface SplitPageItem {
+/** One page tile in a checkbox page-picker grid (Split's extract mode, Convert's PDF→Images). */
+export interface SelectablePageItem {
   id: string;
   /** 0-indexed page number in the original source document. */
   sourceIndex: number;
@@ -40,14 +40,30 @@ export interface SplitPageItem {
   thumbnailUrl: string | null;
 }
 
-/** Output of a Split operation — a single PDF (extract mode) or a zip of several (ranges mode). */
-export interface SplitResult {
+/**
+ * Output of an operation that may produce either a single file or several
+ * (Split's ranges mode, Convert's PDF→Images) — several are bundled into a
+ * zip for download.
+ */
+export interface MultiFileResult {
   blob: Blob;
   url: string;
   size: number;
-  /** Number of PDF files produced (1 for extract/single-range, N when zipped). */
+  /** Number of files produced (1 for a single output, N when zipped). */
   fileCount: number;
-  /** Page count of the single output PDF — only meaningful when fileCount === 1. */
+  /** Page count of the single output PDF — only set when fileCount === 1 and the output is a PDF. */
   pageCount?: number;
   isZip: boolean;
+}
+
+/** Image file selected for the Convert tool's Images → PDF direction. */
+export interface ImageFileItem {
+  id: string;
+  file: File;
+  name: string;
+  size: number;
+  status: PdfFileStatus;
+  error?: string;
+  width?: number;
+  height?: number;
 }

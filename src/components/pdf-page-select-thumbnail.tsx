@@ -3,10 +3,10 @@
 import { Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import type { SplitPageItem } from "@/types/pdf";
+import type { SelectablePageItem } from "@/types/pdf";
 
 interface PdfPageSelectThumbnailProps {
-  page: SplitPageItem;
+  page: SelectablePageItem;
   displayIndex: number;
   onToggle: (id: string) => void;
 }

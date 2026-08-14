@@ -6,7 +6,7 @@ import { useSinglePdfFile } from "@/hooks/use-single-pdf-file";
 import { openPdfForRendering, renderPageThumbnail, PdfRenderError } from "@/lib/pdf/render-page";
 import { buildOrganizedPdf, PdfOrganizeError, type OrganizePageOp } from "@/lib/pdf/organize-pdf";
 import { generateId, buildOutputFilename, stripPdfExtension } from "@/lib/file-utils";
-import { DEFAULT_OUTPUT_FILENAME } from "@/lib/constants";
+import { DEFAULT_ORGANIZE_FILENAME } from "@/lib/constants";
 import type { OrganizePageItem, PdfBuildResult } from "@/types/pdf";
 
 function normalizeRotation(deg: number): OrganizePageItem["rotation"] {
@@ -17,7 +17,9 @@ function normalizeRotation(deg: number): OrganizePageItem["rotation"] {
 export function useOrganizePdf() {
   const { file: sourceFile, setSourceFile, clearFile } = useSinglePdfFile();
   const [pages, setPages] = useState<OrganizePageItem[]>([]);
-  const [outputFilename, setOutputFilename] = useState(DEFAULT_OUTPUT_FILENAME);
+  const [outputFilename, setOutputFilename] = useState(DEFAULT_ORGANIZE_FILENAME);
+  const [watermarkText, setWatermarkText] = useState("");
+  const [addPageNumbersEnabled, setAddPageNumbersEnabled] = useState(false);
   const [isRenderingThumbnails, setIsRenderingThumbnails] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [result, setResult] = useState<PdfBuildResult | null>(null);
@@ -136,7 +138,10 @@ export function useOrganizePdf() {
         sourceIndex: page.sourceIndex,
         rotationDelta: page.rotation,
       }));
-      const built = await buildOrganizedPdf(sourceFile.file, pageOps);
+      const built = await buildOrganizedPdf(sourceFile.file, pageOps, {
+        watermark: watermarkText.trim() ? { text: watermarkText } : undefined,
+        pageNumbers: addPageNumbersEnabled ? {} : undefined,
+      });
       resultRef.current = built;
       setResult(built);
     } catch (error) {
@@ -148,13 +153,15 @@ export function useOrganizePdf() {
     } finally {
       setIsSaving(false);
     }
-  }, [sourceFile, pages, clearResult]);
+  }, [sourceFile, pages, watermarkText, addPageNumbersEnabled, clearResult]);
 
   const reset = useCallback(() => {
     clearResult();
     clearFile();
     setPages([]);
-    setOutputFilename(DEFAULT_OUTPUT_FILENAME);
+    setOutputFilename(DEFAULT_ORGANIZE_FILENAME);
+    setWatermarkText("");
+    setAddPageNumbersEnabled(false);
     renderedForFileId.current = null;
     filenameTouched.current = false;
     setIsSaving(false);
@@ -178,6 +185,10 @@ export function useOrganizePdf() {
     deletePage,
     outputFilename,
     setOutputFilename: updateOutputFilename,
+    watermarkText,
+    setWatermarkText,
+    addPageNumbersEnabled,
+    setAddPageNumbersEnabled,
     isRenderingThumbnails,
     isSaving,
     result,

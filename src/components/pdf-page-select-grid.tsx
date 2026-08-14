@@ -1,10 +1,10 @@
 "use client";
 
 import { PdfPageSelectThumbnail } from "@/components/pdf-page-select-thumbnail";
-import type { SplitPageItem } from "@/types/pdf";
+import type { SelectablePageItem } from "@/types/pdf";
 
 interface PdfPageSelectGridProps {
-  pages: SplitPageItem[];
+  pages: SelectablePageItem[];
   onToggle: (id: string) => void;
 }
 

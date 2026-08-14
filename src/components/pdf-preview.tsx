@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,16 +18,22 @@ interface PdfPreviewProps {
 }
 
 export function PdfPreview({ item, open, onOpenChange }: PdfPreviewProps) {
-  const previewUrl = useMemo(() => {
-    if (!item || !open) return null;
-    return URL.createObjectURL(item.file);
-  }, [item, open]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  // Object URLs must be created AND revoked within the same effect run, not
+  // via useMemo — useMemo has no cleanup slot, so React 18/19 Strict Mode's
+  // dev-only mount→cleanup→remount cycle revokes a memoized URL without ever
+  // recreating it, leaving a permanently broken blob: reference.
   useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+    if (!item || !open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- must pair with the cleanup below; see comment above
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(item.file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [item, open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

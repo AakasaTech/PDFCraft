@@ -3,13 +3,19 @@ import { formatFileSize } from "@/lib/file-utils";
 interface PdfSummaryProps {
   fileCount: number;
   totalPages: number;
+  totalPagesLabel?: string;
   totalSize: number;
 }
 
-export function PdfSummary({ fileCount, totalPages, totalSize }: PdfSummaryProps) {
+export function PdfSummary({
+  fileCount,
+  totalPages,
+  totalPagesLabel = "Total pages",
+  totalSize,
+}: PdfSummaryProps) {
   const stats = [
     { label: "Files", value: fileCount },
-    { label: "Total pages", value: totalPages },
+    { label: totalPagesLabel, value: totalPages },
     { label: "Total size", value: formatFileSize(totalSize) },
   ];
 

@@ -66,3 +66,42 @@ export async function renderPageThumbnail(
   await page.render({ canvas, canvasContext: context, viewport }).promise;
   return canvas.toDataURL("image/png");
 }
+
+/**
+ * Renders a single page (1-indexed) to a full-resolution image Blob, for
+ * Convert's PDF → Images export (as opposed to `renderPageThumbnail`, which
+ * is deliberately small/lossy for fast preview rendering).
+ */
+export async function renderPageToImageBlob(
+  pdf: PDFDocumentProxy,
+  pageNumber: number,
+  options: { scale?: number; format?: "png" | "jpeg"; quality?: number } = {}
+): Promise<Blob> {
+  const { scale = 2, format = "png", quality = 0.92 } = options;
+
+  const page = await pdf.getPage(pageNumber);
+  const viewport = page.getViewport({ scale });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new PdfRenderError("Image export is not supported in this browser.");
+  }
+
+  await page.render({ canvas, canvasContext: context, viewport }).promise;
+
+  const mimeType = format === "png" ? "image/png" : "image/jpeg";
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) resolve(blob);
+        else reject(new PdfRenderError("Could not export this page as an image."));
+      },
+      mimeType,
+      quality
+    );
+  });
+}

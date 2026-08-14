@@ -9,6 +9,8 @@ interface PdfResultPanelProps {
   filename: string;
   title?: string;
   description: string;
+  /** Append " · {size}" after the description. Turn off when the description already states size(s) itself. */
+  showSize?: boolean;
   downloadLabel?: string;
   onDownload: () => void;
   onStartOver: () => void;
@@ -20,6 +22,7 @@ export function PdfResultPanel({
   filename,
   title = "Your PDF is ready",
   description,
+  showSize = true,
   downloadLabel = "Download PDF",
   onDownload,
   onStartOver,
@@ -32,7 +35,8 @@ export function PdfResultPanel({
       <div className="space-y-1">
         <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         <p className="text-sm text-muted-foreground">
-          {description} &middot; {formatFileSize(result.size)}
+          {description}
+          {showSize && <> &middot; {formatFileSize(result.size)}</>}
         </p>
         <p className="truncate text-xs text-muted-foreground">{filename}</p>
       </div>

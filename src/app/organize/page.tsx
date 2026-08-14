@@ -11,6 +11,7 @@ import { PdfResultPanel } from "@/components/pdf-result-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useOrganizePdf } from "@/hooks/use-organize-pdf";
 
 const HOW_IT_WORKS = [
@@ -42,6 +43,10 @@ export default function OrganizePage() {
     deletePage,
     outputFilename,
     setOutputFilename,
+    watermarkText,
+    setWatermarkText,
+    addPageNumbersEnabled,
+    setAddPageNumbersEnabled,
     isRenderingThumbnails,
     isSaving,
     result,
@@ -137,6 +142,25 @@ export default function OrganizePage() {
                       />
 
                       <div className="mx-auto max-w-2xl space-y-6">
+                        <div className="space-y-4 rounded-lg border border-border p-4">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="watermark-text">Watermark text (optional)</Label>
+                            <Input
+                              id="watermark-text"
+                              value={watermarkText}
+                              onChange={(event) => setWatermarkText(event.target.value)}
+                              placeholder="e.g. CONFIDENTIAL"
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 text-sm text-foreground">
+                            <Checkbox
+                              checked={addPageNumbersEnabled}
+                              onCheckedChange={(checked) => setAddPageNumbersEnabled(checked === true)}
+                            />
+                            Add page numbers
+                          </label>
+                        </div>
+
                         <div className="space-y-1.5">
                           <Label htmlFor="output-filename">Output filename</Label>
                           <div className="flex items-center gap-2">

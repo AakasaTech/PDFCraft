@@ -4,28 +4,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useSinglePdfFile } from "@/hooks/use-single-pdf-file";
 import { openPdfForRendering, renderPageThumbnail, PdfRenderError } from "@/lib/pdf/render-page";
-import { buildOrganizedPdf, PdfOrganizeError } from "@/lib/pdf/organize-pdf";
-import { parsePageRanges, splitPdfByRanges, PdfSplitError } from "@/lib/pdf/split-pdf";
+import { convertPdfToImages } from "@/lib/pdf/pdf-to-images";
 import { buildZip } from "@/lib/zip-utils";
-import {
-  generateId,
-  buildOutputFilename,
-  stripPdfExtension,
-  sanitizeFilename,
-} from "@/lib/file-utils";
-import { DEFAULT_SPLIT_FILENAME } from "@/lib/constants";
+import { generateId, sanitizeFilename, stripPdfExtension } from "@/lib/file-utils";
+import { DEFAULT_CONVERT_FILENAME } from "@/lib/constants";
 import type { SelectablePageItem, MultiFileResult } from "@/types/pdf";
 
-export type SplitMode = "extract" | "ranges";
+export type ImageFormat = "png" | "jpeg";
 
-export function useSplitPdf() {
+export function usePdfToImages() {
   const { file: sourceFile, setSourceFile, clearFile } = useSinglePdfFile();
   const [pages, setPages] = useState<SelectablePageItem[]>([]);
-  const [mode, setMode] = useState<SplitMode>("extract");
-  const [rangesInput, setRangesInput] = useState("");
-  const [outputFilename, setOutputFilenameState] = useState(DEFAULT_SPLIT_FILENAME);
+  const [format, setFormat] = useState<ImageFormat>("png");
+  const [outputFilename, setOutputFilenameState] = useState(DEFAULT_CONVERT_FILENAME);
   const [isRenderingThumbnails, setIsRenderingThumbnails] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
   const [result, setResult] = useState<MultiFileResult | null>(null);
   const resultRef = useRef<MultiFileResult | null>(null);
   const renderedForFileId = useRef<string | null>(null);
@@ -45,8 +38,6 @@ export function useSplitPdf() {
       renderedForFileId.current = null;
       filenameTouched.current = false;
       setPages([]);
-      setRangesInput("");
-      setMode("extract");
       setSourceFile(incoming);
     },
     [clearResult, setSourceFile]
@@ -57,7 +48,8 @@ export function useSplitPdf() {
     setOutputFilenameState(name);
   }, []);
 
-  // Render page thumbnails once the source file's page count is known.
+  // Render page thumbnails once the source file's page count is known. All
+  // pages start selected — converting the whole document is the common case.
   useEffect(() => {
     if (!sourceFile || sourceFile.status !== "ready") return;
     if (renderedForFileId.current === sourceFile.id) return;
@@ -72,7 +64,7 @@ export function useSplitPdf() {
 
     const initialPages: SelectablePageItem[] = Array.from(
       { length: sourceFile.pageCount },
-      (_, i) => ({ id: generateId(), sourceIndex: i, selected: false, thumbnailUrl: null })
+      (_, i) => ({ id: generateId(), sourceIndex: i, selected: true, thumbnailUrl: null })
     );
     setPages(initialPages);
 
@@ -122,112 +114,84 @@ export function useSplitPdf() {
 
   const selectedCount = pages.filter((page) => page.selected).length;
 
-  const runExtract = useCallback(async (): Promise<MultiFileResult> => {
+  const convert = useCallback(async () => {
     const selected = pages.filter((page) => page.selected);
-    if (!sourceFile || selected.length === 0) {
-      throw new PdfSplitError("Select at least one page to extract.");
-    }
-    const built = await buildOrganizedPdf(
-      sourceFile.file,
-      selected.map((page) => ({ sourceIndex: page.sourceIndex, rotationDelta: 0 as const }))
-    );
-    return {
-      blob: built.blob,
-      url: built.url,
-      size: built.size,
-      fileCount: 1,
-      pageCount: built.pageCount,
-      isZip: false,
-    };
-  }, [sourceFile, pages]);
-
-  const runRanges = useCallback(async (): Promise<MultiFileResult> => {
-    if (!sourceFile) {
-      throw new PdfSplitError("Upload a PDF first.");
-    }
-    const ranges = parsePageRanges(rangesInput, sourceFile.pageCount);
-    const outputs = await splitPdfByRanges(sourceFile.file, ranges);
-
-    if (outputs.length === 1) {
-      const only = outputs[0];
-      return {
-        blob: only.result.blob,
-        url: only.result.url,
-        size: only.result.size,
-        fileCount: 1,
-        pageCount: only.result.pageCount,
-        isZip: false,
-      };
-    }
-
-    const entries = await Promise.all(
-      outputs.map(async (output) => ({
-        name: output.name,
-        bytes: new Uint8Array(await output.result.blob.arrayBuffer()),
-      }))
-    );
-    // Individual object URLs are no longer needed once bundled into the zip.
-    for (const output of outputs) URL.revokeObjectURL(output.result.url);
-
-    const zipBlob = buildZip(entries);
-    return {
-      blob: zipBlob,
-      url: URL.createObjectURL(zipBlob),
-      size: zipBlob.size,
-      fileCount: outputs.length,
-      isZip: true,
-    };
-  }, [sourceFile, rangesInput]);
-
-  const split = useCallback(async () => {
-    if (!sourceFile || sourceFile.status !== "ready") {
-      toast.error("Upload a PDF first.");
+    if (!sourceFile || sourceFile.status !== "ready" || selected.length === 0) {
+      toast.error("Select at least one page to convert.");
       return;
     }
 
-    setIsSaving(true);
+    setIsConverting(true);
     clearResult();
 
     try {
-      const built = mode === "extract" ? await runExtract() : await runRanges();
+      const pageNumbers = selected.map((page) => page.sourceIndex + 1);
+      const outputs = await convertPdfToImages(sourceFile.file, pageNumbers, format);
+
+      let built: MultiFileResult;
+      if (outputs.length === 1) {
+        const only = outputs[0];
+        built = {
+          blob: only.blob,
+          url: URL.createObjectURL(only.blob),
+          size: only.blob.size,
+          fileCount: 1,
+          isZip: false,
+        };
+      } else {
+        const entries = await Promise.all(
+          outputs.map(async (output) => ({
+            name: output.name,
+            bytes: new Uint8Array(await output.blob.arrayBuffer()),
+          }))
+        );
+        const zipBlob = buildZip(entries);
+        built = {
+          blob: zipBlob,
+          url: URL.createObjectURL(zipBlob),
+          size: zipBlob.size,
+          fileCount: outputs.length,
+          isZip: true,
+        };
+      }
+
       resultRef.current = built;
       setResult(built);
     } catch (error) {
       const message =
-        error instanceof PdfSplitError || error instanceof PdfOrganizeError
+        error instanceof PdfRenderError
           ? error.message
-          : "Something went wrong while splitting your PDF. Please try again.";
+          : "Something went wrong while converting this PDF. Please try again.";
       toast.error(message);
     } finally {
-      setIsSaving(false);
+      setIsConverting(false);
     }
-  }, [sourceFile, mode, runExtract, runRanges, clearResult]);
+  }, [sourceFile, pages, format, clearResult]);
 
   const reset = useCallback(() => {
     clearResult();
     clearFile();
     setPages([]);
-    setRangesInput("");
-    setMode("extract");
-    setOutputFilenameState(DEFAULT_SPLIT_FILENAME);
+    setFormat("png");
+    setOutputFilenameState(DEFAULT_CONVERT_FILENAME);
     renderedForFileId.current = null;
     filenameTouched.current = false;
-    setIsSaving(false);
+    setIsConverting(false);
     setIsRenderingThumbnails(false);
   }, [clearResult, clearFile]);
 
-  const canSplit =
+  const canConvert =
     !!sourceFile &&
     sourceFile.status === "ready" &&
     !isRenderingThumbnails &&
-    !isSaving &&
-    (mode === "extract" ? selectedCount > 0 : rangesInput.trim().length > 0);
+    !isConverting &&
+    selectedCount > 0;
 
+  const extension = format === "png" ? "png" : "jpg";
   const buildOutputName = useCallback(() => {
-    return result?.isZip
-      ? `${sanitizeFilename(outputFilename)}.zip`
-      : buildOutputFilename(outputFilename);
-  }, [outputFilename, result]);
+    const base = sanitizeFilename(outputFilename);
+    return result?.isZip ? `${base}.zip` : `${base}.${extension}`;
+  }, [outputFilename, result, extension]);
 
   return {
     sourceFile,
@@ -237,18 +201,16 @@ export function useSplitPdf() {
     selectAll,
     selectNone,
     selectedCount,
-    mode,
-    setMode,
-    rangesInput,
-    setRangesInput,
+    format,
+    setFormat,
     outputFilename,
     setOutputFilename,
     isRenderingThumbnails,
-    isSaving,
+    isConverting,
     result,
-    split,
+    convert,
     reset,
-    canSplit,
+    canConvert,
     buildOutputName,
   };
 }

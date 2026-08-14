@@ -1,18 +1,24 @@
 "use client";
 
 import { useCallback } from "react";
-import { useDropzone, type FileRejection } from "react-dropzone";
+import { useDropzone, type Accept, type FileRejection } from "react-dropzone";
 import { UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MAX_FILE_SIZE_LABEL } from "@/lib/constants";
 import { toast } from "sonner";
 
+const PDF_ACCEPT: Accept = { "application/pdf": [".pdf"] };
+
 interface PdfUploaderProps {
   onFilesSelected: (files: File[]) => void;
   multiple?: boolean;
   title?: string;
   helpText?: string;
+  accept?: Accept;
+  ariaLabel?: string;
+  buttonLabel?: string;
+  rejectionMessage?: string;
 }
 
 export function PdfUploader({
@@ -20,6 +26,10 @@ export function PdfUploader({
   multiple = true,
   title = "Drop PDF files here",
   helpText = `Supports multiple PDF files · up to ${MAX_FILE_SIZE_LABEL} each`,
+  accept = PDF_ACCEPT,
+  ariaLabel = "Upload PDF files",
+  buttonLabel = "Select PDF Files",
+  rejectionMessage = "is not a supported PDF file.",
 }: PdfUploaderProps) {
   const onDrop = useCallback(
     (acceptedFiles: File[], rejections: FileRejection[]) => {
@@ -27,15 +37,15 @@ export function PdfUploader({
         onFilesSelected(acceptedFiles);
       }
       for (const rejection of rejections) {
-        toast.error(`"${rejection.file.name}" is not a supported PDF file.`);
+        toast.error(`"${rejection.file.name}" ${rejectionMessage}`);
       }
     },
-    [onFilesSelected]
+    [onFilesSelected, rejectionMessage]
   );
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
-    accept: { "application/pdf": [".pdf"] },
+    accept,
     multiple,
   });
 
@@ -43,7 +53,7 @@ export function PdfUploader({
     <div
       {...getRootProps({
         role: "button",
-        "aria-label": "Upload PDF files",
+        "aria-label": ariaLabel,
       })}
       className={cn(
         "group flex cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed border-border bg-muted/30 p-10 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-14",
@@ -70,7 +80,7 @@ export function PdfUploader({
           open();
         }}
       >
-        Select PDF Files
+        {buttonLabel}
       </Button>
       <p className="text-xs text-muted-foreground">{helpText}</p>
     </div>
