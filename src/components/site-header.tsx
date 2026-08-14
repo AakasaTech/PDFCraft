@@ -31,7 +31,7 @@ export function SiteHeader() {
           <div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <FileStack className="size-4" />
           </div>
-          <span className="text-lg font-semibold text-foreground">PDF Merge</span>
+          <span className="text-lg font-semibold text-foreground">PDFCraft</span>
         </Link>
 
         <div className="flex items-center gap-1">

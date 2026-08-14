@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Convert PDF to Images or Images to PDF | PDF Merge",
+  title: "Convert PDF to Images or Images to PDF | PDFCraft",
   description:
     "Convert JPG or PNG images into a PDF, or export PDF pages as images. Entirely in your browser, download instantly.",
 };

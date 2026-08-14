@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Organize PDF Pages | PDF Merge",
+  title: "Organize PDF Pages | PDFCraft",
   description:
     "Reorder, rotate, or delete pages in a PDF — entirely in your browser. Drag pages into place and download the updated document instantly.",
 };

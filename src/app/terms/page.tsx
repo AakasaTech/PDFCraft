@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { SimplePageLayout } from "@/components/simple-page-layout";
 
-export const metadata: Metadata = { title: "Terms | PDF Merge" };
+export const metadata: Metadata = { title: "Terms | PDFCraft" };
 
 export default function TermsPage() {
   return (
     <SimplePageLayout title="Terms">
       <p>
-        PDF Merge is provided as-is, without warranty of any kind. You are responsible for the
+        PDFCraft is provided as-is, without warranty of any kind. You are responsible for the
         documents you process using this tool.
       </p>
       <p>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Compress PDF Files Online | PDF Merge",
+  title: "Compress PDF Files Online | PDFCraft",
   description:
     "Reduce PDF file size with lossless optimization — strips metadata and compresses document structure, entirely in your browser.",
 };

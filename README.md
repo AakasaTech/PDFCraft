@@ -1,7 +1,7 @@
-# PDF Merge
+# PDFCraft
 
 A small suite of PDF tools — merge, organize, split, convert, compress, and sign — that run
-entirely in your browser.
+entirely in your browser. Part of the [Aakasa Digital](https://aakasa.dev) product family.
 
 ## Overview
 
@@ -90,6 +90,16 @@ never touches the output file.
 - [dnd-kit](https://dndkit.com/) for sortable drag-and-drop reordering (file lists, page grids)
 - [next-themes](https://github.com/pacocoursey/next-themes) for light/dark mode
 - [Vitest](https://vitest.dev/) for unit tests
+- [Inter](https://fonts.google.com/specimen/Inter) (via `next/font/google`) — the typeface shared
+  across the Aakasa Digital product family (aakasa.dev, BillCraft, TaskCraft, SupportCraft)
+
+## Branding
+
+PDFCraft's color tokens (`src/app/globals.css`) reuse the parent Aakasa Digital brand exactly —
+Primary Blue `#1D8CFF` and Midnight Navy `#0F172A` / Deep Navy `#0A1C50` for dark mode — rather
+than inventing a new accent hue the way sibling products (TaskCraft, SupportCraft) each do. The
+footer credits "Built by Aakasa Digital" linking to [aakasa.dev](https://aakasa.dev), matching
+the attribution pattern used across the other Craft apps.
 
 ## Project Structure
 

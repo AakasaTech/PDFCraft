@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { SimplePageLayout } from "@/components/simple-page-layout";
 
-export const metadata: Metadata = { title: "About | PDF Merge" };
+export const metadata: Metadata = { title: "About | PDFCraft" };
 
 export default function AboutPage() {
   return (
     <SimplePageLayout title="About">
       <p>
-        PDF Merge is a simple, privacy-focused tool for combining PDF documents. It runs entirely
-        in your browser, so your files never leave your device.
+        PDFCraft is a simple, privacy-focused suite of PDF tools — merge, organize, split,
+        convert, compress, and sign. It runs entirely in your browser, so your files never leave
+        your device.
       </p>
     </SimplePageLayout>
   );

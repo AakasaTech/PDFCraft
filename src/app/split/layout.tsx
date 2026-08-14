@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Split PDF Files Online | PDF Merge",
+  title: "Split PDF Files Online | PDFCraft",
   description:
     "Split a PDF into multiple files — extract selected pages or split by page ranges. Entirely in your browser, download instantly.",
 };

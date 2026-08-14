@@ -16,5 +16,5 @@ export const DEFAULT_CONVERT_FILENAME = "converted-document";
 export const DEFAULT_COMPRESS_FILENAME = "compressed-document";
 export const DEFAULT_SIGN_FILENAME = "signed-document";
 
-export const SITE_NAME = "PDF Merge";
+export const SITE_NAME = "PDFCraft";
 export const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://pdfcraft.aakasa.dev";
