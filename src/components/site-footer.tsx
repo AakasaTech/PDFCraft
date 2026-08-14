@@ -7,7 +7,7 @@ export function SiteFooter() {
         <div>
           <p className="text-sm font-medium text-foreground">PDF Merge</p>
           <p className="text-xs text-muted-foreground">
-            Merge PDF documents quickly, privately, and securely.
+            Merge, organize, split, convert, compress & sign PDFs — free, fast, and private.
           </p>
         </div>
         <nav className="flex gap-4 text-xs text-muted-foreground">

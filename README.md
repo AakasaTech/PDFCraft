@@ -5,7 +5,13 @@ entirely in your browser.
 
 ## Overview
 
-**Merge PDF** (`/`)
+**Landing page** (`/`)
+- A tool hub: hero, privacy line, and a responsive icon grid linking to all six tools (2 columns
+  on mobile, 3 on desktop). Server Component — no client JS beyond the shared header/theme.
+- Generic 3-step "How it works" + a Privacy section, distinct from each tool's own page, which
+  keeps its own tool-specific "How it works."
+
+**Merge PDF** (`/merge`)
 - Upload two or more PDF files via drag-and-drop or a file picker
 - Reorder files with an accessible, keyboard-friendly drag list
 - Preview each PDF before merging
@@ -90,7 +96,10 @@ never touches the output file.
 ```text
 src/
 ├── app/
-│   ├── page.tsx                 # Merge tool ("/")
+│   ├── page.tsx                 # Landing page ("/") — tool hub, Server Component
+│   ├── merge/
+│   │   ├── page.tsx             # Merge tool ("/merge")
+│   │   └── layout.tsx           # Route-level metadata (page.tsx is a client component)
 │   ├── organize/
 │   │   ├── page.tsx             # Organize tool ("/organize")
 │   │   └── layout.tsx           # Route-level metadata (page.tsx is a client component)

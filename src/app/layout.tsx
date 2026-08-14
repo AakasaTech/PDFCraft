@@ -16,23 +16,27 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const DEFAULT_TITLE = "Free Online PDF Tools | PDF Merge";
+const DEFAULT_DESCRIPTION =
+  "Merge, organize, split, convert, compress, and sign PDF files — entirely in your browser. No uploads, no sign-up, completely private.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Merge PDF Files Online | PDF Merge",
-  description:
-    "Combine multiple PDF files into one document quickly and securely. Rearrange PDFs, merge them instantly, and download the combined PDF.",
+  // Every tool route (merge/organize/split/convert/compress/sign) has its own
+  // layout.tsx that fully overrides this with its own "| PDF Merge"-suffixed
+  // title — no template here, or those would double up the suffix.
+  title: DEFAULT_TITLE,
+  description: DEFAULT_DESCRIPTION,
   openGraph: {
-    title: "Merge PDF Files Online | PDF Merge",
-    description:
-      "Combine multiple PDF files into one document quickly and securely. Rearrange PDFs, merge them instantly, and download the combined PDF.",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
     siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Merge PDF Files Online | PDF Merge",
-    description:
-      "Combine multiple PDF files into one document quickly and securely. Rearrange PDFs, merge them instantly, and download the combined PDF.",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
   },
 };
 
