@@ -42,3 +42,5 @@ next-env.d.ts
 
 # copied at install-time by scripts/copy-pdf-worker.mjs
 /public/pdf.worker.min.mjs
+
+.vercel
