@@ -1,7 +1,11 @@
 # PDFCraft
 
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE.md)
+
 A small suite of PDF tools — merge, organize, split, convert, compress, and sign — that run
 entirely in your browser. Part of the [Aakasa Digital](https://aakasa.dev) product family.
+
+> **⚠️ Non-Commercial Only:** This repository is source-available for personal, educational, research, and evaluation purposes. **Commercial use requires a paid license.** See [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md) or contact [licenses@aakasa.dev](mailto:licenses@aakasa.dev) for details.
 
 ## Overview
 
