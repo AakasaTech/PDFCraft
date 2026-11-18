@@ -11,11 +11,12 @@ interface PdfPageSelectGridProps {
 export function PdfPageSelectGrid({ pages, onToggle }: PdfPageSelectGridProps) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-      {pages.map((page, index) => (
+      {pages.map((page) => (
         <PdfPageSelectThumbnail
           key={page.id}
           page={page}
-          displayIndex={index}
+          // Label by original page number so it stays correct after reversing.
+          displayIndex={page.sourceIndex}
           onToggle={onToggle}
         />
       ))}
