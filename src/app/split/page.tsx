@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, ShieldCheck, TriangleAlert } from "lucide-react";
-import { Scissors, Upload, ListChecks } from "lucide-react";
+import { ArrowUpDown, Scissors, Upload, ListChecks } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { PdfUploader } from "@/components/pdf-uploader";
@@ -45,6 +45,7 @@ export default function SplitPage() {
     togglePage,
     selectAll,
     selectNone,
+    reversePages,
     selectedCount,
     mode,
     setMode,
@@ -178,6 +179,12 @@ export default function SplitPage() {
                               <Button type="button" variant="ghost" size="sm" onClick={selectNone}>
                                 Select None
                               </Button>
+                              {pages.length > 1 && (
+                                <Button type="button" variant="ghost" size="sm" onClick={reversePages}>
+                                  <ArrowUpDown className="size-4" />
+                                  Reverse order
+                                </Button>
+                              )}
                             </div>
                           </div>
                           <PdfPageSelectGrid pages={pages} onToggle={togglePage} />

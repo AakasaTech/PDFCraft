@@ -120,6 +120,10 @@ export function useSplitPdf() {
     setPages((current) => current.map((page) => ({ ...page, selected: false })));
   }, []);
 
+  const reversePages = useCallback(() => {
+    setPages((current) => [...current].reverse());
+  }, []);
+
   const selectedCount = pages.filter((page) => page.selected).length;
 
   const runExtract = useCallback(async (): Promise<MultiFileResult> => {
@@ -236,6 +240,7 @@ export function useSplitPdf() {
     togglePage,
     selectAll,
     selectNone,
+    reversePages,
     selectedCount,
     mode,
     setMode,
