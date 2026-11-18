@@ -15,7 +15,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { ArrowUpDown } from "lucide-react";
 import { ImageFileCard } from "@/components/image-file-card";
+import { Button } from "@/components/ui/button";
 import type { ImageFileItem } from "@/types/pdf";
 
 interface ImageFileListProps {
@@ -45,9 +47,23 @@ export function ImageFileList({ items, onReorder, onRemove }: ImageFileListProps
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        Drag images to arrange the order in which they will appear in the PDF.
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          Drag images to arrange the order in which they will appear in the PDF.
+        </p>
+        {items.length > 1 && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="shrink-0"
+            onClick={() => onReorder([...items].reverse())}
+          >
+            <ArrowUpDown className="size-4" />
+            Reverse order
+          </Button>
+        )}
+      </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
